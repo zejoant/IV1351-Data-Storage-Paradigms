@@ -1,0 +1,82 @@
+TASK 1:
+SELECT 
+  TO_CHAR(lts.date, 'Month') AS "Month",
+  COUNT(lesson) AS "Total",
+  COUNT(il),
+  COUNT(gl),
+  COUNT(ensemble)
+FROM lesson
+LEFT JOIN lesson_time_slot lts ON lesson.id = lts.lesson_id
+LEFT JOIN individual_lesson il ON lesson.id = il.lesson_id
+LEFT JOIN group_lesson gl ON lesson.id = gl.lesson_id
+LEFT JOIN ensemble ON lesson.id = ensemble.lesson_id
+WHERE EXTRACT(YEAR FROM lts.date) = 2024
+GROUP BY "Month"
+ORDER BY max(EXTRACT(MONTH FROM lts.date));
+
+TASK 2:
+SELECT 
+    sibling_count AS "No. of Siblings", 
+    COUNT(*) AS "No. of Students"
+FROM (
+    SELECT 
+        sibling_id, 
+        COUNT(*) - 1 AS sibling_count
+    FROM student
+    GROUP BY sibling_id) AS sibling_counts
+GROUP BY "No. of Siblings"
+ORDER BY "No. of Siblings";
+
+TASK 3:
+SELECT instructor_id AS "Instructor ID", person.name AS "Name", COUNT(*) AS "No of Lessons"
+FROM lesson
+JOIN lesson_time_slot lts ON lesson.id = lts.lesson_id
+JOIN instructor ON lesson.instructor_id = instructor.id
+JOIN person ON instructor.person_id = person.id
+WHERE EXTRACT(MONTH FROM lts.date) = 5
+GROUP BY instructor_id, person.name
+HAVING COUNT(*) > 1;
+
+TASK 4:
+SELECT 
+  TO_CHAR(date, 'DAY') AS "Day", 
+  ensemble.genre AS "Genre",
+  CASE
+    WHEN ensemble.max_students - COUNT(sll) = 0 THEN 'No Seats' 
+    WHEN ensemble.max_students - COUNT(sll) < 3 THEN '1 or 2 Seats'
+    ELSE 'Many Seats'
+  END AS "No. of Free Seats"
+FROM lesson_time_slot lst
+JOIN lesson ON lesson.id = lst.lesson_id
+JOIN ensemble ON lesson.id = ensemble.lesson_id
+JOIN student_lesson_list sll ON lesson.id = sll.lesson_id
+GROUP BY lst.lesson_id, ensemble.genre, ensemble.max_students;
+
+HIGHER GRADE:
+CREATE TABLE historical_data (
+	lesson_type VARCHAR(500), 
+	genre VARCHAR(500) NULL, 
+	instrument VARCHAR(500) NULL,
+	lesson_price INT,
+	student_name VARCHAR(500),
+	student_email VARCHAR(500)
+)
+
+INSERT INTO historical_data (lesson_type, genre, instrument, lesson_price, student_name, student_email)
+SELECT 
+	lesson.type, 
+	ensemble.genre, 
+	CASE 
+        WHEN lesson.type = 'Individual_lesson' THEN il.instrument_type
+        WHEN lesson.type = 'group_lesson' THEN gl.instrument_type
+    END AS instrument,
+	lesson.price,
+	person.name,
+	person.address
+FROM lesson
+LEFT JOIN ensemble ON ensemble.lesson_id = lesson.id
+LEFT JOIN individual_lesson il ON il.lesson_id = lesson.id
+LEFT JOIN group_lesson gl ON gl.lesson_id = lesson.id
+LEFT JOIN student_lesson_list sll ON lesson.id = sll.lesson_id
+LEFT JOIN student ON sll.student_id = student.id
+LEFT JOIN person ON student.person_id = person.id;
