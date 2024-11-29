@@ -1,9 +1,9 @@
 SELECT 
   TO_CHAR(lts.date, 'Month') AS "Month",
   COUNT(lesson) AS "Total",
-  COUNT(il),
-  COUNT(gl),
-  COUNT(ensemble)
+  COUNT(il) AS "Individual",
+  COUNT(gl) AS "Group",
+  COUNT(ensemble) AS "Ensemble"
 FROM lesson
 LEFT JOIN lesson_time_slot lts ON lesson.id = lts.lesson_id
 LEFT JOIN individual_lesson il ON lesson.id = il.lesson_id

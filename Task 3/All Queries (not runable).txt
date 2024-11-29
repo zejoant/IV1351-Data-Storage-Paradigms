@@ -2,9 +2,9 @@ TASK 1:
 SELECT 
   TO_CHAR(lts.date, 'Month') AS "Month",
   COUNT(lesson) AS "Total",
-  COUNT(il),
-  COUNT(gl),
-  COUNT(ensemble)
+  COUNT(il) AS "Individual",
+  COUNT(gl) AS "Group",
+  COUNT(ensemble) AS "Ensemble"
 FROM lesson
 LEFT JOIN lesson_time_slot lts ON lesson.id = lts.lesson_id
 LEFT JOIN individual_lesson il ON lesson.id = il.lesson_id
@@ -26,6 +26,36 @@ FROM (
     GROUP BY sibling_id) AS sibling_counts
 GROUP BY "No. of Siblings"
 ORDER BY "No. of Siblings";
+
+TASK 2 with VIEW:
+CREATE VIEW sibling_counts AS
+SELECT sibling_id,
+COUNT(*) - 1 AS sibling_count
+FROM student
+GROUP BY sibling_id;
+	
+SELECT 
+    sibling_count AS "No. of Siblings", 
+    COUNT(*) AS "No. of Students"
+FROM sibling_counts
+GROUP BY "No. of Siblings"
+ORDER BY "No. of Siblings";
+
+TASK 2 with MATERIALIZED VIEW:
+CREATE MATERIALIZED VIEW sibling_counts AS
+SELECT sibling_id,
+COUNT(*) - 1 AS sibling_count
+FROM student
+GROUP BY sibling_id;
+	
+SELECT 
+    sibling_count AS "No. of Siblings", 
+    COUNT(*) AS "No. of Students"
+FROM sibling_counts
+GROUP BY "No. of Siblings"
+ORDER BY "No. of Siblings";
+
+(REFRESH MATERIALIZED VIEW sibling_counts when needed)
 
 TASK 3:
 SELECT instructor_id AS "Instructor ID", person.name AS "Name", COUNT(*) AS "No of Lessons"
